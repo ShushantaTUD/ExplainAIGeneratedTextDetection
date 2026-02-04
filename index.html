@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>From Features to Explanations | Explainable AI-Generated Text Detection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #fafafa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f5f5f7;
+            --bg-code: #1a1a2e;
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a4a5a;
+            --text-muted: #8a8a9a;
+            --accent-primary: #2563eb;
+            --accent-secondary: #7c3aed;
+            --accent-ai: #dc2626;
+            --accent-ai-bg: #fef2f2;
+            --accent-ai-border: #fecaca;
+            --accent-human: #059669;
+            --accent-human-bg: #ecfdf5;
+            --accent-human-border: #a7f3d0;
+            --border-color: #e5e5e5;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            font-size: 16px;
+        }
+
+        /* Header */
+        .hero {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
+            color: white;
+            padding: 5rem 2rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(37, 99, 235, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(124, 58, 237, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .paper-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .paper-badge-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .hero h1 {
+            font-family: 'Crimson Pro', Georgia, serif;
+            font-size: clamp(2rem, 5vw, 3.25rem);
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.7);
+            max-width: 700px;
+        }
+
+        .hero-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .hero-link-primary {
+            background: white;
+            color: var(--text-primary);
+        }
+
+        .hero-link-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        .hero-link-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .hero-link-secondary:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        /* Main content */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Abstract section */
+        .abstract-section {
+            padding: 4rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+        }
+
+        .abstract-text {
+            font-family: 'Crimson Pro', Georgia, serif;
+            font-size: 1.15rem;
+            line-height: 1.9;
+            color: var(--text-secondary);
+            text-align: justify;
+            hyphens: auto;
+        }
+
+        .abstract-text p {
+            margin-bottom: 1rem;
+        }
+
+        .abstract-text p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Demo section */
+        .demo-section {
+            padding: 4rem 0;
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .demo-header h2 {
+            font-family: 'Crimson Pro', Georgia, serif;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .demo-header p {
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Example cards */
+        .examples-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2.5rem;
+        }
+
+        @media (min-width: 900px) {
+            .examples-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .example-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+
+        .example-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+        }
+
+        .example-header {
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .example-header.ai {
+            background: var(--accent-ai-bg);
+            border-bottom-color: var(--accent-ai-border);
+        }
+
+        .example-header.human {
+            background: var(--accent-human-bg);
+            border-bottom-color: var(--accent-human-border);
+        }
+
+        .example-type {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .example-type.ai {
+            color: var(--accent-ai);
+        }
+
+        .example-type.human {
+            color: var(--accent-human);
+        }
+
+        .example-type-icon {
+            font-size: 1.25rem;
+        }
+
+        .prediction-badge {
+            padding: 0.35rem 0.85rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .prediction-badge.ai {
+            background: var(--accent-ai);
+            color: white;
+        }
+
+        .prediction-badge.human {
+            background: var(--accent-human);
+            color: white;
+        }
+
+        .example-content {
+            padding: 1.5rem;
+        }
+
+        .example-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .example-text {
+            font-family: 'Crimson Pro', Georgia, serif;
+            font-size: 1rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid var(--border-color);
+            margin-bottom: 1.5rem;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .example-text.ai {
+            border-left-color: var(--accent-ai);
+        }
+
+        .example-text.human {
+            border-left-color: var(--accent-human);
+        }
+
+        /* SHAP explanation */
+        .shap-section {
+            margin-top: 0.5rem;
+        }
+
+        .shap-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .shap-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .shap-toggle {
+            font-size: 0.75rem;
+            color: var(--accent-primary);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-weight: 500;
+        }
+
+        .shap-toggle:hover {
+            text-decoration: underline;
+        }
+
+        /* Feature bars */
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .feature-item {
+            display: grid;
+            grid-template-columns: 140px 1fr auto;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        .feature-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .feature-bar-container {
+            height: 20px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .feature-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s ease;
+        }
+
+        .feature-bar.ai {
+            background: linear-gradient(90deg, #fca5a5, var(--accent-ai));
+        }
+
+        .feature-bar.human {
+            background: linear-gradient(90deg, #6ee7b7, var(--accent-human));
+        }
+
+        .feature-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .feature-direction {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        .feature-direction.ai {
+            background: var(--accent-ai-bg);
+            color: var(--accent-ai);
+        }
+
+        .feature-direction.human {
+            background: var(--accent-human-bg);
+            color: var(--accent-human);
+        }
+
+        /* Expanded features */
+        .features-expanded {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .features-expanded.visible {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Summary stats */
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .stat-box {
+            background: var(--bg-tertiary);
+            padding: 0.75rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.25rem;
+        }
+
+        /* Package section */
+        .package-section {
+            padding: 4rem 0;
+            background: var(--bg-tertiary);
+            margin-top: 4rem;
+        }
+
+        .package-card {
+            background: var(--bg-code);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .package-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .package-title {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .package-version {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .package-body {
+            padding: 1.5rem 2rem;
+        }
+
+        .code-block {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+
+        .code-comment {
+            color: #64748b;
+        }
+
+        .code-keyword {
+            color: #c084fc;
+        }
+
+        .code-string {
+            color: #4ade80;
+        }
+
+        .code-function {
+            color: #60a5fa;
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        footer a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .hero {
+                padding: 3rem 1.5rem 2.5rem;
+            }
+
+            .hero h1 {
+                font-size: 1.75rem;
+            }
+
+            .container {
+                padding: 0 1.5rem;
+            }
+
+            .feature-item {
+                grid-template-columns: 100px 1fr auto;
+            }
+
+            .summary-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="hero-content">
+            <div class="paper-badge">
+                <span class="paper-badge-dot"></span>
+                Research Paper
+            </div>
+            <h1>From Features to Explanations: A Study of Explainable and Generalisable AI-Generated Text Detection</h1>
+            <p class="hero-subtitle">An interpretable framework combining linguistic features, machine learning, and SHAP explanations for transparent AI text detection.</p>
+            <div class="hero-links">
+                <a href="https://pypi.org/project/xai-text-classifier/" class="hero-link hero-link-primary" target="_blank">
+                    📦 PyPI Package
+                </a>
+                <a href="https://github.com/" class="hero-link hero-link-secondary" target="_blank">
+                    📄 Paper (Coming Soon)
+                </a>
+                <a href="https://github.com/" class="hero-link hero-link-secondary" target="_blank">
+                    💻 GitHub
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Abstract Section -->
+    <section class="abstract-section">
+        <div class="container">
+            <div class="section-label">Abstract</div>
+            <div class="abstract-text">
+                <p>As Large Language Models (LLMs) become increasingly embedded in everyday and academic contexts, reliably distinguishing AI-generated text from human writing has become an urgent challenge. Although many detection methods report high accuracy, most operate as black-box systems, providing limited insight into the linguistic evidence driving their predictions.</p>
+                
+                <p>We present an explainable framework for AI-generated text detection that integrates linguistic feature engineering, machine learning, and Explainable AI (XAI). We evaluate 38 linguistic features and apply Recursive Feature Elimination (RFE) to derive dataset-specific optimal feature subsets for two benchmark corpora: the PAN-CLEF and COLING shared task datasets. Using an XGBoost classifier trained on these interpretable features, our approach achieves leaderboard-competitive performance on the PAN CLEF 2025 test set (F1 = 0.9748), comparable to top-performing systems while avoiding reliance on fine-tuned large language models.</p>
+                
+                <p>However, performance degrades under cross-domain and cross-generator evaluation, particularly on COLING, highlighting persistent limitations in detector generalisability. To mitigate this, we investigate simple ensemble strategies that improve robustness on unseen domains. We further employ SHAP (SHapley Additive exPlanations) to provide global and instance-level explanations, identifying the linguistic features that drive predictions and clarifying why generalisation failures arise. Finally, we release an open-source Python package via PyPI that provides both predictions and interpretable explanations for individual texts, enabling transparent and informed use of AI-generated text detection in practice. Overall, our results show that explainable feature-based models can be highly competitive on shared-task benchmarks while providing critical transparency about their behaviour and limitations.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="demo-section">
+        <div class="container">
+            <div class="demo-header">
+                <div class="section-label">Interactive Demo</div>
+                <h2>SHAP Explanations in Action</h2>
+                <p>See how our explainable classifier analyzes real text samples, providing transparent insights into its predictions.</p>
+            </div>
+
+            <div class="examples-grid">
+                <!-- AI-Generated Example -->
+                <div class="example-card">
+                    <div class="example-header ai">
+                        <div class="example-type ai">
+                            <span class="example-type-icon">🤖</span>
+                            AI-Generated Text
+                        </div>
+                        <span class="prediction-badge ai">Detected as AI</span>
+                    </div>
+                    <div class="example-content">
+                        <div class="example-label">Input Text</div>
+                        <div class="example-text ai">
+                            Artificial intelligence has revolutionized numerous industries, transforming the way we approach complex problems and develop innovative solutions. Machine learning algorithms, in particular, have demonstrated remarkable capabilities in pattern recognition, natural language processing, and predictive analytics. These technological advancements continue to reshape our understanding of what machines can accomplish, pushing the boundaries of automation and intelligent systems. The integration of AI into everyday applications has become increasingly seamless, offering enhanced efficiency and unprecedented opportunities for growth across various sectors.
+                        </div>
+
+                        <div class="summary-stats">
+                            <div class="stat-box">
+                                <div class="stat-value" style="color: var(--accent-ai);">87.3%</div>
+                                <div class="stat-label">AI Confidence</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-value">38</div>
+                                <div class="stat-label">Features</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-value">23/15</div>
+                                <div class="stat-label">AI/Human</div>
+                            </div>
+                        </div>
+
+                        <div class="shap-section">
+                            <div class="shap-header">
+                                <span class="shap-title">Top SHAP Contributors</span>
+                                <button class="shap-toggle" onclick="toggleFeatures('ai-features')">Show all features ↓</button>
+                            </div>
+                            
+                            <div class="feature-list" id="ai-top-features">
+                                <div class="feature-item">
+                                    <span class="feature-name">pos_diversity</span>
+                                    <div class="feature-bar-container">
+                                        <div class="feature-bar ai" style="width: 92%;"></div>
+                                    </div>
+                                    <span class="feature-direction ai">→ AI +1.06</span>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="feature-name">pronoun_ratio</span>
+                                    <div class="feature-bar-container">
+                                        <div class="feature-bar ai" style="width: 85%;"></div>
+                                    </div>
+                                    <span class="feature-direction ai">→ AI +2.67</span>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="feature-name">sentence_length_var</span>
+                                    <div class="feature-bar-container">
+                                        <div class="feature-bar ai" style="width: 78%;"></div>
+                                    </div>
+                                    <span class="feature-direction ai">→ AI +0.71</span>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="feature-name">sentiment_subj</span>
+                                    <div class="feature-bar-container">
+                                        <div class="feature-bar ai" style="width: 72%;"></div>
+                                    </div>
+                                    <span class="feature-direction ai">→ AI +1.02</span>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="feature-name">stopword_count</span>
+                                    <div class="feature-bar-container">
+                                        <div class="feature-bar ai" style="width: 65%;"></div>
+                                    </div>
+                                    <span class="feature-direction ai">→ AI +1.41</span>
+                                </div>
+                            </div>
+
+                            <div class="features-expanded" id="ai-features">
+                                <div class="feature-list">
+                                    <div class="feature-item">
+                                        <span class="feature-name">hapax_ratio</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar human" style="width: 88%;"></div>
+                                        </div>
+                                        <span class="feature-direction human">← Human -1.55</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <span class="feature-name">punctuation_count</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar human" style="width: 75%;"></div>
+                                        </div>
+                                        <span class="feature-direction human">← Human -1.72</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <span class="feature-name">flesch_reading</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar human" style="width: 58%;"></div>
+                                        </div>
+                                        <span class="feature-direction human">← Human -0.63</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <span class="feature-name">type_token_ratio</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar human" style="width: 52%;"></div>
+                                        </div>
+                                        <span class="feature-direction human">← Human -0.51</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <span class="feature-name">predictability</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar ai" style="width: 48%;"></div>
+                                        </div>
+                                        <span class="feature-direction ai">→ AI +0.58</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <span class="feature-name">paragraph_count</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar human" style="width: 45%;"></div>
+                                        </div>
+                                        <span class="feature-direction human">← Human -0.58</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <span class="feature-name">specificity_score</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar human" style="width: 42%;"></div>
+                                        </div>
+                                        <span class="feature-direction human">← Human -0.64</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <span class="feature-name">emotion_variation</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar ai" style="width: 38%;"></div>
+                                        </div>
+                                        <span class="feature-direction ai">→ AI +0.33</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Human-Written Example -->
+                <div class="example-card">
+                    <div class="example-header human">
+                        <div class="example-type human">
+                            <span class="example-type-icon">👤</span>
+                            Human-Written Text
+                        </div>
+                        <span class="prediction-badge human">Detected as Human</span>
+                    </div>
+                    <div class="example-content">
+                        <div class="example-label">Input Text</div>
+                        <div class="example-text human">
+                            I still remember the first time I tried to bake bread from scratch – what a disaster! Flour everywhere, dough that wouldn't rise, and a final product that could've doubled as a doorstop. But you know what? I kept at it. There's something deeply satisfying about kneading dough with your own hands, watching it transform. My grandmother always said the secret was patience (and maybe a bit of cursing under your breath when things go wrong). Now, years later, the smell of fresh bread fills my kitchen every Sunday morning. It's not perfect, but it's mine.
+                        </div>
+
+                        <div class="summary-stats">
+                            <div class="stat-box">
+                                <div class="stat-value" style="color: var(--accent-human);">91.2%</div>
+                                <div class="stat-label">Human Confidence</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-value">38</div>
+                                <div class="stat-label">Features</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-value">14/24</div>
+                                <div class="stat-label">AI/Human</div>
+                            </div>
+                        </div>
+
+                        <div class="shap-section">
+                            <div class="shap-header">
+                                <span class="shap-title">Top SHAP Contributors</span>
+                                <button class="shap-toggle" onclick="toggleFeatures('human-features')">Show all features ↓</button>
+                            </div>
+                            
+                            <div class="feature-list" id="human-top-features">
+                                <div class="feature-item">
+                                    <span class="feature-name">hapax_ratio</span>
+                                    <div class="feature-bar-container">
+                                        <div class="feature-bar human" style="width: 95%;"></div>
+                                    </div>
+                                    <span class="feature-direction human">← Human -2.31</span>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="feature-name">personal_voice</span>
+                                    <div class="feature-bar-container">
+                                        <div class="feature-bar human" style="width: 88%;"></div>
+                                    </div>
+                                    <span class="feature-direction human">← Human -1.87</span>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="feature-name">punctuation_count</span>
+                                    <div class="feature-bar-container">
+                                        <div class="feature-bar human" style="width: 82%;"></div>
+                                    </div>
+                                    <span class="feature-direction human">← Human -1.65</span>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="feature-name">modal_freq</span>
+                                    <div class="feature-bar-container">
+                                        <div class="feature-bar human" style="width: 75%;"></div>
+                                    </div>
+                                    <span class="feature-direction human">← Human -1.42</span>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="feature-name">type_token_ratio</span>
+                                    <div class="feature-bar-container">
+                                        <div class="feature-bar human" style="width: 68%;"></div>
+                                    </div>
+                                    <span class="feature-direction human">← Human -1.18</span>
+                                </div>
+                            </div>
+
+                            <div class="features-expanded" id="human-features">
+                                <div class="feature-list">
+                                    <div class="feature-item">
+                                        <span class="feature-name">paragraph_coherence</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar human" style="width: 62%;"></div>
+                                        </div>
+                                        <span class="feature-direction human">← Human -0.94</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <span class="feature-name">emotion_variation</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar human" style="width: 55%;"></div>
+                                        </div>
+                                        <span class="feature-direction human">← Human -0.78</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <span class="feature-name">sentence_complexity</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar ai" style="width: 48%;"></div>
+                                        </div>
+                                        <span class="feature-direction ai">→ AI +0.52</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <span class="feature-name">word_entropy</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar human" style="width: 45%;"></div>
+                                        </div>
+                                        <span class="feature-direction human">← Human -0.61</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <span class="feature-name">discourse_markers</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar human" style="width: 42%;"></div>
+                                        </div>
+                                        <span class="feature-direction human">← Human -0.55</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <span class="feature-name">hedge_uncertainty</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar human" style="width: 38%;"></div>
+                                        </div>
+                                        <span class="feature-direction human">← Human -0.48</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <span class="feature-name">repetition_rate</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar human" style="width: 35%;"></div>
+                                        </div>
+                                        <span class="feature-direction human">← Human -0.42</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <span class="feature-name">pos_diversity</span>
+                                        <div class="feature-bar-container">
+                                            <div class="feature-bar ai" style="width: 32%;"></div>
+                                        </div>
+                                        <span class="feature-direction ai">→ AI +0.38</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Package Section -->
+    <section class="package-section">
+        <div class="container">
+            <div class="demo-header" style="margin-bottom: 2rem;">
+                <div class="section-label">Open Source</div>
+                <h2>Try It Yourself</h2>
+                <p>Install our Python package to analyze your own text with full SHAP explainability.</p>
+            </div>
+
+            <div class="package-card">
+                <div class="package-header">
+                    <div class="package-title">
+                        📦 xai-text-classifier
+                        <span class="package-version">v0.1.3</span>
+                    </div>
+                </div>
+                <div class="package-body">
+                    <div class="code-block">
+                        <code><span class="code-comment"># Installation</span>
+pip install xai-text-classifier</code>
+                    </div>
+                    <div class="code-block">
+                        <code><span class="code-comment"># Usage</span>
+<span class="code-keyword">from</span> xai <span class="code-keyword">import</span> shap_explainer
+
+text = <span class="code-string">"Your text to analyze goes here..."</span>
+result = <span class="code-function">shap_explainer</span>(text)
+
+<span class="code-comment"># Get prediction</span>
+<span class="code-function">print</span>(result[<span class="code-string">'prediction'</span>])  <span class="code-comment"># 'AI-generated' or 'Human-written'</span>
+
+<span class="code-comment"># Explore feature explanations</span>
+<span class="code-keyword">for</span> feature, data <span class="code-keyword">in</span> result.items():
+    <span class="code-keyword">if</span> feature != <span class="code-string">'prediction'</span>:
+        <span class="code-function">print</span>(f<span class="code-string">"{feature}: SHAP={data['SHAP_Value']:.3f}, Direction={data['Direction']}"</span>)</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>
+                © 2025 • Built with ❤️ for explainable AI research<br>
+                <a href="https://pypi.org/project/xai-text-classifier/" target="_blank">PyPI</a> • 
+                <a href="https://github.com/" target="_blank">GitHub</a> • 
+                <a href="mailto:">Contact</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        function toggleFeatures(id) {
+            const element = document.getElementById(id);
+            const button = element.previousElementSibling.querySelector('.shap-toggle');
+            
+            if (element.classList.contains('visible')) {
+                element.classList.remove('visible');
+                button.textContent = 'Show all features ↓';
+            } else {
+                element.classList.add('visible');
+                button.textContent = 'Hide features ↑';
+            }
+        }
+
+        // Animate bars on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.querySelectorAll('.feature-bar').forEach(bar => {
+                        const width = bar.style.width;
+                        bar.style.width = '0%';
+                        setTimeout(() => {
+                            bar.style.width = width;
+                        }, 100);
+                    });
+                }
+            });
+        }, { threshold: 0.2 });
+
+        document.querySelectorAll('.example-card').forEach(card => {
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>
